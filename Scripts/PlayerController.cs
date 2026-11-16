@@ -1,7 +1,12 @@
 using UnityEngine;
+using System.Collections;
+using System.Collections.Generic;
 
 public class PlayerController : MonoBehaviour
 {
+    [Header("/======/ MOVEMENT /======/")]
+    [Header("")]
+
     [Header("=====CONSTANTS=====")]
 
     [Header("Moving Values")]
@@ -21,13 +26,41 @@ public class PlayerController : MonoBehaviour
 
     [Header("Movement")]
     public float current_speed;
+    public float current_speed_coefficient = 1f;
     public Vector3 move;
     public Quaternion goalRotation;
+    public bool canMove = true;
 
     [Header("Jumping")]
     public bool has_double_jumped;
     public bool is_jumping;
     public float double_jump_cooldown;
+
+    [Header("/======/ ACTIONS /======/")]
+    [Header("")]
+
+    [Header("General Action Settings")]
+    public float action_trigger_max_cooldown = 0.3f;
+    public float action_trigger_cooldown;
+    public bool ActionTriggered;
+
+    [Header("====LIFT BOTTLE====")]
+
+    [Header("Bottle Lifting Settings")]
+    public GameObject bottle; // Found automatically on start of the scene
+    public float maximal_bottle_distance; // Minimal distance to grab the bottle
+    public float maximal_y_bottle_offset; // Minimal distance in vertical axis to grab the bottle
+    public float bottle_height_offset; // Height above the player origin for the bottle to be held
+    public float bottle_lift_speed_coefficient; // Coefficient to decrease the player's speed when lifting the bottle
+    public float bottle_lift_animation_speed;
+
+    [Header("Bottle Lifting Variables")]
+    public float bottle_distance;
+    public float y_bottle_offset;
+    public bool is_bottle_lifted;
+
+    [Header("/======/ GENERAL /======/")]
+    [Header("")]
 
     [Header("=====COMPONENTS=====")]
     public PlayerInputHandler player_input_handler;
@@ -43,11 +76,14 @@ public class PlayerController : MonoBehaviour
 
         player_input_handler = GetComponent<PlayerInputHandler>();
         character_controller = GetComponent<CharacterController>();
+
+        bottle = GameObject.FindWithTag("Bottle");
     }
 
     void Update ()
     {
-        HandleMovement();
+        if (canMove) { HandleMovement(); }
+        HandleObjectInteraction();
     }
 
     private void HandleMovement ()
@@ -57,13 +93,13 @@ public class PlayerController : MonoBehaviour
 
 
         Vector3 worldDirection = CalculateWorldDirection();
-        move.x = worldDirection.x * current_speed;
-        move.z = worldDirection.z * current_speed;
+        move.x = worldDirection.x * current_speed * current_speed_coefficient;
+        move.z = worldDirection.z * current_speed * current_speed_coefficient;
 
         if (move.x != 0 || move.z != 0)
         {
             Quaternion aRotation = transform.rotation;
-            transform.eulerAngles = new Vector3(0f, camera.eulerAngles.y + (Mathf.Atan2(player_input_handler.MovementInput.y, player_input_handler.MovementInput.x) * Mathf.Rad2Deg), 0f);
+            transform.eulerAngles = new Vector3(0f, camera.eulerAngles.y + (Mathf.Atan2(player_input_handler.MovementInput.y, player_input_handler.MovementInput.x) * Mathf.Rad2Deg-90f), 0f);
             goalRotation = transform.rotation;
             transform.rotation = aRotation;
             transform.rotation = Quaternion.Slerp(transform.rotation, goalRotation, turningSpeed * Time.deltaTime);
@@ -113,5 +149,94 @@ public class PlayerController : MonoBehaviour
         Vector3 inputDirection = new Vector3(player_input_handler.MovementInput.x, 0f, player_input_handler.MovementInput.y);
         Vector3 worldDirection = camera.TransformDirection(inputDirection);
         return worldDirection;
+    }
+
+    private void HandleObjectInteraction ()
+    {
+        if (action_trigger_cooldown >= 0)
+        {
+            action_trigger_cooldown -= Time.deltaTime;
+        }
+        if (player_input_handler.ActionTriggered != true || action_trigger_cooldown > 0)
+        {
+            ActionTriggered = false;
+        }
+        if (action_trigger_cooldown < 0 && player_input_handler.ActionTriggered)
+        {
+            ActionTriggered = true;
+            action_trigger_cooldown = action_trigger_max_cooldown;
+        }
+        
+
+        HandleBottleInteraction();
+    }
+
+    private void HandleBottleInteraction ()
+    {
+        if (is_bottle_lifted != true)
+        {
+            bottle_distance = Vector3.Distance(transform.position, bottle.transform.position);
+            y_bottle_offset = Mathf.Abs(transform.position.y - bottle.transform.position.y);
+            current_speed_coefficient = 1f;
+        }
+        if (is_bottle_lifted)
+        {
+            current_speed_coefficient = bottle_lift_speed_coefficient;
+            if (ActionTriggered)
+            {
+                PutBottleDown();
+            }
+        }
+        if (bottle_distance <= maximal_bottle_distance && y_bottle_offset <= maximal_y_bottle_offset && is_bottle_lifted == false)
+        {
+            if (ActionTriggered)
+            {
+                LiftBottle();
+            }
+        }
+    }
+
+    private void LiftBottle ()
+    {
+        Debug.Log("lift");
+        is_bottle_lifted = true;
+        bottle.GetComponent<Rigidbody>().isKinematic = true;
+        transform.LookAt(bottle.transform.position);
+        transform.eulerAngles = new Vector3(0f, transform.eulerAngles.y, 0f);
+        StartCoroutine(TakeBottleUp());
+    }
+
+    IEnumerator TakeBottleUp ()
+    {
+        canMove = false;
+        Vector3 goalPosition = new Vector3(transform.position.x, transform.position.y + bottle_height_offset, transform.position.z);
+        while (bottle.transform.position != goalPosition)
+        {
+            bottle.transform.position = Vector3.MoveTowards(bottle.transform.position, goalPosition, bottle_lift_animation_speed * Time.deltaTime);
+            yield return new WaitForSeconds(Time.deltaTime); 
+        }
+        bottle.transform.parent = transform;
+        canMove = true;
+        yield return new WaitForSeconds(1f);
+    }
+
+    private void PutBottleDown ()
+    {
+        StartCoroutine(PutBottleDownEnumerator());
+    }
+
+    IEnumerator PutBottleDownEnumerator ()
+    {
+        canMove = false;
+        Vector3 goalPosition = new Vector3(0, -bottle_height_offset+0.3f, 1.5f);
+        while (bottle.transform.localPosition != goalPosition)
+        {
+            bottle.transform.localPosition = Vector3.MoveTowards(bottle.transform.localPosition, goalPosition, bottle_lift_animation_speed * Time.deltaTime);
+            yield return new WaitForSeconds(Time.deltaTime); 
+        }
+        bottle.transform.parent = null;
+        canMove = true;
+        bottle.GetComponent<Rigidbody>().isKinematic = false;
+        is_bottle_lifted = false;
     }
 }

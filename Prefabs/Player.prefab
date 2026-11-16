@@ -100,11 +100,11 @@ GameObject:
   m_Component:
   - component: {fileID: 4480643176383074866}
   - component: {fileID: 6433551577891963298}
-  - component: {fileID: 1228810574914935396}
   - component: {fileID: 815602016303412207}
+  - component: {fileID: 1808507551252023182}
   m_Layer: 0
   m_Name: Player
-  m_TagString: Untagged
+  m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -151,35 +151,6 @@ CharacterController:
   m_SkinWidth: 0.08
   m_MinMoveDistance: 0.001
   m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &1228810574914935396
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4648990237025362360}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ac64dd564ff811994a0101753528511c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: '::'
-  walk_speed: 5
-  sprint_speed: 10
-  turningSpeed: 50
-  jump_strength: 9
-  gravity: 1.5
-  double_jump_active: 1
-  max_double_jump_cooldown: 0.5
-  current_speed: 0
-  move: {x: 0, y: 0, z: 0}
-  goalRotation: {x: 0, y: 0, z: 0, w: 0}
-  has_double_jumped: 0
-  is_jumping: 0
-  double_jump_cooldown: 0
-  player_input_handler: {fileID: 0}
-  animator: {fileID: 0}
-  character_controller: {fileID: 0}
-  camera: {fileID: 0}
 --- !u!114 &815602016303412207
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -200,6 +171,40 @@ MonoBehaviour:
   MovementInput: {x: 0, y: 0}
   SprintTriggered: 0
   JumpTriggered: 0
+--- !u!114 &1808507551252023182
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4648990237025362360}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ac64dd564ff811994a0101753528511c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerController
+  walk_speed: 5
+  sprint_speed: 10
+  turningSpeed: 50
+  jump_strength: 9
+  gravity: 1.5
+  double_jump_active: 1
+  max_double_jump_cooldown: 0.5
+  current_speed: 0
+  move: {x: 0, y: 0, z: 0}
+  goalRotation: {x: 0, y: 0, z: 0, w: 0}
+  has_double_jumped: 0
+  is_jumping: 0
+  double_jump_cooldown: 0
+  bottle: {fileID: 0}
+  minimal_bottle_distance: 0
+  bottle_height_offset: 0
+  bottle_distance: 0
+  is_bottle_lifted: 0
+  player_input_handler: {fileID: 0}
+  animator: {fileID: 0}
+  character_controller: {fileID: 0}
+  camera: {fileID: 0}
 --- !u!1 &7347950552456601107
 GameObject:
   m_ObjectHideFlags: 0
