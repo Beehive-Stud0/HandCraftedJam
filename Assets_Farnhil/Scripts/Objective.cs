@@ -9,9 +9,26 @@ public class Objective : MonoBehaviour
     public ParticleSystem particles;
     public bool secondCondition = true;
 
+    public bool isBottleHere;
+
     void Start ()
     {
         gm = FindAnyObjectByType<GameManager>();
+    }
+
+    void OnTriggerEnter (Collider other)
+    {
+        if (other.tag == "Bottle")
+        {
+            isBottleHere = true;
+        }
+    }
+    void OnTriggerExit (Collider other)
+    {
+        if (other.tag == "Bottle")
+        {
+            isBottleHere = false;
+        }
     }
 
     void OnTriggerStay (Collider other)
