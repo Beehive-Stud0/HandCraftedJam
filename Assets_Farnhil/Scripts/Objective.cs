@@ -37,6 +37,8 @@ public class Objective : MonoBehaviour
         {
             if (hasToActivateParticles) { particles.Play(); }
             gm.ingredients.Add(id);
+            gm.PlayObjectiveSound();
+            Destroy(this);
         }
     }
 }

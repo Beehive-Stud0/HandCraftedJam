@@ -14,6 +14,7 @@ public class NewDogBehaviour : MonoBehaviour
     public Transform closestObjective;
     public bool is_sitting;
     public bool isBarking;
+    public AudioSource audioSource;
     // public float sitting_toggle_cooldown;
 
     [Header("Movement")]
@@ -87,6 +88,7 @@ public class NewDogBehaviour : MonoBehaviour
 
     IEnumerator BarkAnimation()
     {
+        audioSource.Play();
         var lookPos = closestObjective.position - transform.position;
         lookPos.y = 0;
         var rotation = Quaternion.LookRotation(lookPos);

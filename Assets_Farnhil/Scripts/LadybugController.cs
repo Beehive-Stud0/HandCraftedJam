@@ -10,13 +10,21 @@ public class LadybugController : MonoBehaviour
     public GameObject player;
     private Quaternion lookRotation;
     private Quaternion current_rotation;
+    public Animator animator;
+    public GameManager gm;
+
+    void Start ()
+    {
+        gm = GameObject.FindAnyObjectByType<GameManager>();
+    }
 
     void OnTriggerEnter (Collider other)
     {
         if (other.tag == "Player")
         {
+            gm.ladybug = true;
             isPlayerRiding = true;
-            player = other.gameObject;;
+            player = other.gameObject;
             player.transform.parent = transform;
             player.GetComponent<PlayerController>().canMove = false;
         }
@@ -26,6 +34,7 @@ public class LadybugController : MonoBehaviour
     {
         if (isPlayerRiding)
         {
+            animator.SetBool("isFlying", true);
             player.GetComponent<PlayerController>().canMove = false;
 
             Vector3 lookPos = transform.position - points[point_index].position;
@@ -49,6 +58,9 @@ public class LadybugController : MonoBehaviour
                     point_index += 1;
                 }
             }
+        }
+        else {
+            animator.SetBool("isFlying", false);
         }
     }
 }

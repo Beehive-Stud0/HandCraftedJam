@@ -14,16 +14,20 @@ public class rockCameraRadiusChange : MonoBehaviour
     public float transitionTime;
     public float maxTransitionTime = 3f;
 
+    public GameManager gm;
+
     void Start ()
     {
         cameraFollow = GameObject.FindAnyObjectByType<CinemachineOrbitalFollow>();
         minRadius = cameraFollow.Radius;
+        gm = GameObject.FindAnyObjectByType<GameManager>();
     }
 
     void OnTriggerEnter (Collider other)
     {
         if (other.tag == "Player")
         {
+            gm.directView = true;
             isZoomingIn = true;
             isZoomingOut = false;
             transitionTime = 0f;

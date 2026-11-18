@@ -84,6 +84,7 @@ public class PlayerController : MonoBehaviour
 
     [Header("=======OTHER=======")]
     public Transform camera;
+    public GameManager gm;
 
     void Start ()
     {
@@ -97,11 +98,14 @@ public class PlayerController : MonoBehaviour
         dogGameObject = GameObject.FindWithTag("Dog");
         dogTransform = dogGameObject.transform;
         dogBehaviour = dogGameObject.GetComponent<NewDogBehaviour>();
+
+        gm = GameObject.FindAnyObjectByType<GameManager>();
     }
 
     void Update ()
     {
         if (canMove) { HandleMovement(); }
+        else { animator.SetFloat("speed", 0); }
         HandleObjectInteraction();
         HandleDogActions();
     }
@@ -118,11 +122,14 @@ public class PlayerController : MonoBehaviour
 
         if (move.x != 0 || move.z != 0)
         {
+            animator.SetFloat("speed", current_speed);
             Quaternion aRotation = transform.rotation;
-            transform.eulerAngles = new Vector3(0f, camera.eulerAngles.y + (Mathf.Atan2(player_input_handler.MovementInput.y, player_input_handler.MovementInput.x) * Mathf.Rad2Deg-90f), 0f);
-            goalRotation = transform.rotation;
-            transform.rotation = aRotation;
-            transform.rotation = Quaternion.Slerp(transform.rotation, goalRotation, turningSpeed * Time.deltaTime);
+            float _targetRotation = Mathf.Atan2(player_input_handler.MovementInput.x, player_input_handler.MovementInput.y) * Mathf.Rad2Deg + camera.eulerAngles.y;
+            transform.rotation = Quaternion.Euler(0.0f, _targetRotation, 0.0f);
+        }
+        else
+        {
+            animator.SetFloat("speed", 0);
         }
 
         HandleVerticalMovement();
@@ -202,15 +209,17 @@ public class PlayerController : MonoBehaviour
         if (is_bottle_lifted)
         {
             current_speed_coefficient = bottle_lift_speed_coefficient;
-            if (ActionTriggered)
+            if (ActionTriggered && canMove)
             {
+                animator.SetTrigger("putDown");
                 PutBottleDown();
             }
         }
         if (bottle_distance <= maximal_bottle_distance && y_bottle_offset <= maximal_y_bottle_offset && is_bottle_lifted == false)
         {
-            if (ActionTriggered)
+            if (ActionTriggered && canMove)
             {
+                animator.SetTrigger("pickUp");
                 LiftBottle();
             }
         }
@@ -218,6 +227,10 @@ public class PlayerController : MonoBehaviour
 
     private void LiftBottle ()
     {
+        if (gm.ingredients.Contains(1) && gm.ingredients.Contains(2) && gm.ingredients.Contains(3))
+        {
+            gm.finish = true;
+        }
         Debug.Log("lift");
         is_bottle_lifted = true;
         bottle.GetComponent<Rigidbody>().isKinematic = true;
@@ -229,14 +242,17 @@ public class PlayerController : MonoBehaviour
     IEnumerator TakeBottleUp ()
     {
         canMove = false;
-        Vector3 goalPosition = new Vector3(transform.position.x, transform.position.y + bottle_height_offset, transform.position.z);
-        while (bottle.transform.position != goalPosition)
+        yield return new WaitForSeconds(0.1f);
+        Vector3 goalPosition = new Vector3(0, bottle_height_offset, 1.1f);
+        bottle.transform.parent = transform;
+        while (bottle.transform.localPosition != goalPosition)
         {
-            bottle.transform.position = Vector3.MoveTowards(bottle.transform.position, goalPosition, bottle_lift_animation_speed * Time.deltaTime);
+            bottle.transform.localPosition = Vector3.MoveTowards(bottle.transform.localPosition, goalPosition, bottle_lift_animation_speed * Time.deltaTime);
             yield return new WaitForSeconds(Time.deltaTime); 
         }
-        bottle.transform.parent = transform;
+        
         canMove = true;
+        animator.SetBool("weight", true);
         yield return new WaitForSeconds(1f);
     }
 
@@ -251,6 +267,7 @@ public class PlayerController : MonoBehaviour
     IEnumerator PutBottleDownEnumerator ()
     {
         canMove = false;
+        yield return new WaitForSeconds(0.1f);
         Vector3 goalPosition = new Vector3(0, -bottle_height_offset+2f, 4f);
         while (bottle.transform.localPosition != goalPosition)
         {
@@ -260,6 +277,7 @@ public class PlayerController : MonoBehaviour
         bottle.transform.parent = null;
         canMove = true;
         bottle.GetComponent<Rigidbody>().isKinematic = false;
+        animator.SetBool("weight", false);
         is_bottle_lifted = false;
     }
 
